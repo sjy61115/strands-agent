@@ -1,0 +1,31 @@
+{
+    "items": [
+        {
+            "trace_id": "trace-db-001",
+            "timestamp": "2026-03-01T14:10:02Z",
+            "service": "payment-api",
+            "span_name": "POST /payments",
+            "duration_ms": 5100,
+            "status": "ERROR",
+            "error_message": "upstream database timeout"
+        },
+        {
+            "trace_id": "trace-db-002",
+            "timestamp": "2026-03-01T14:10:05Z",
+            "service": "payment-api",
+            "span_name": "insert_payment_record",
+            "duration_ms": 4800,
+            "status": "ERROR",
+            "error_message": "connection refused"
+        },
+        {
+            "trace_id": "trace-db-003",
+            "timestamp": "2026-03-01T14:10:08Z",
+            "service": "payment-api",
+            "span_name": "acquire_db_connection",
+            "duration_ms": 3000,
+            "status": "ERROR",
+            "error_message": "pool exhausted"
+        }
+    ]
+}

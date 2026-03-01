@@ -1,0 +1,28 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T16:00:00Z",
+            "service": "payment-api",
+            "metric_name": "ingestion_backlog_count",
+            "value": 4200
+        },
+        {
+            "timestamp": "2026-03-01T16:00:00Z",
+            "service": "payment-api",
+            "metric_name": "indexing_delay_seconds",
+            "value": 145
+        },
+        {
+            "timestamp": "2026-03-01T16:00:00Z",
+            "service": "payment-api",
+            "metric_name": "http_5xx_rate",
+            "value": 1.2
+        },
+        {
+            "timestamp": "2026-03-01T16:00:00Z",
+            "service": "payment-api",
+            "metric_name": "p95_latency_ms",
+            "value": 240
+        }
+    ]
+}

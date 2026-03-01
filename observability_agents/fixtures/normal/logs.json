@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "timestamp": "2026-03-01T14:00:05Z",
+      "service": "payment-api",
+      "level": "INFO",
+      "component": "PaymentController",
+      "message": "Incoming payment request processed successfully"
+    },
+    {
+      "timestamp": "2026-03-01T14:01:12Z",
+      "service": "payment-api",
+      "level": "INFO",
+      "component": "PaymentService",
+      "message": "Payment authorization completed"
+    },
+    {
+      "timestamp": "2026-03-01T14:02:30Z",
+      "service": "payment-api",
+      "level": "WARN",
+      "component": "RetryHandler",
+      "message": "Transient retry occurred once but recovered successfully"
+    }
+  ]
+}

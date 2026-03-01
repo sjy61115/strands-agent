@@ -1,0 +1,22 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T14:00:00Z",
+            "service": "payment-api",
+            "metric_name": "http_requests_per_second",
+            "value": 120
+        },
+        {
+            "timestamp": "2026-03-01T14:00:00Z",
+            "service": "payment-api",
+            "metric_name": "http_5xx_rate",
+            "value": 0.2
+        },
+        {
+            "timestamp": "2026-03-01T14:00:00Z",
+            "service": "payment-api",
+            "metric_name": "p95_latency_ms",
+            "value": 180
+        }
+    ]
+}
