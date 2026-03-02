@@ -1,0 +1,25 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T15:00:02Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "RateLimiter",
+            "message": "Request volume increased rapidly above baseline"
+        },
+        {
+            "timestamp": "2026-03-01T15:00:06Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "ApiGateway",
+            "message": "Upstream response latency increasing under load"
+        },
+        {
+            "timestamp": "2026-03-01T15:00:10Z",
+            "service": "payment-api",
+            "level": "ERROR",
+            "component": "PaymentController",
+            "message": "HTTP 503 returned due to temporary overload"
+        }
+    ]
+}

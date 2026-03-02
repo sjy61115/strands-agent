@@ -1,0 +1,28 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T15:00:00Z",
+            "service": "payment-api",
+            "metric_name": "http_requests_per_second",
+            "value": 950
+        },
+        {
+            "timestamp": "2026-03-01T15:00:00Z",
+            "service": "payment-api",
+            "metric_name": "http_5xx_rate",
+            "value": 9.8
+        },
+        {
+            "timestamp": "2026-03-01T15:00:00Z",
+            "service": "payment-api",
+            "metric_name": "p95_latency_ms",
+            "value": 2800
+        },
+        {
+            "timestamp": "2026-03-01T15:00:00Z",
+            "service": "payment-api",
+            "metric_name": "cpu_usage_percent",
+            "value": 92
+        }
+    ]
+}

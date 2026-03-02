@@ -1,0 +1,32 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T14:10:01Z",
+            "service": "payment-api",
+            "level": "ERROR",
+            "component": "DatabaseClient",
+            "message": "Database connection timeout while acquiring connection from pool"
+        },
+        {
+            "timestamp": "2026-03-01T14:10:04Z",
+            "service": "payment-api",
+            "level": "ERROR",
+            "component": "PaymentRepository",
+            "message": "Failed to execute query: connection refused by database host"
+        },
+        {
+            "timestamp": "2026-03-01T14:10:07Z",
+            "service": "payment-api",
+            "level": "ERROR",
+            "component": "ConnectionPool",
+            "message": "Too many connections. Pool exhausted"
+        },
+        {
+            "timestamp": "2026-03-01T14:10:10Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "RetryHandler",
+            "message": "Retry attempts increasing for database access"
+        }
+    ]
+}

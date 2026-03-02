@@ -1,0 +1,30 @@
+{
+    "items": [
+        {
+            "trace_id": "trace-traffic-001",
+            "timestamp": "2026-03-01T15:00:03Z",
+            "service": "payment-api",
+            "span_name": "POST /payments",
+            "duration_ms": 3200,
+            "status": "ERROR",
+            "error_message": "request timed out under peak load"
+        },
+        {
+            "trace_id": "trace-traffic-002",
+            "timestamp": "2026-03-01T15:00:07Z",
+            "service": "payment-api",
+            "span_name": "authorize_card",
+            "duration_ms": 2100,
+            "status": "OK"
+        },
+        {
+            "trace_id": "trace-traffic-003",
+            "timestamp": "2026-03-01T15:00:12Z",
+            "service": "payment-api",
+            "span_name": "POST /payments",
+            "duration_ms": 3500,
+            "status": "ERROR",
+            "error_message": "service overloaded"
+        }
+    ]
+}

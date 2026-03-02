@@ -1,0 +1,30 @@
+{
+    "items": [
+        {
+            "trace_id": "trace-os-001",
+            "timestamp": "2026-03-01T16:00:04Z",
+            "service": "payment-api",
+            "span_name": "ingest_logs",
+            "duration_ms": 1800,
+            "status": "ERROR",
+            "error_message": "ingestion queue delay"
+        },
+        {
+            "trace_id": "trace-os-002",
+            "timestamp": "2026-03-01T16:00:08Z",
+            "service": "payment-api",
+            "span_name": "refresh_index",
+            "duration_ms": 2200,
+            "status": "ERROR",
+            "error_message": "index refresh timeout"
+        },
+        {
+            "trace_id": "trace-os-003",
+            "timestamp": "2026-03-01T16:00:13Z",
+            "service": "payment-api",
+            "span_name": "search_recent_logs",
+            "duration_ms": 900,
+            "status": "OK"
+        }
+    ]
+}

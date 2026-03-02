@@ -1,0 +1,25 @@
+{
+    "items": [
+        {
+            "timestamp": "2026-03-01T16:00:01Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "IngestionPipeline",
+            "message": "Log ingestion backlog increasing"
+        },
+        {
+            "timestamp": "2026-03-01T16:00:05Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "OpenSearchIndexer",
+            "message": "Index refresh delayed beyond expected threshold"
+        },
+        {
+            "timestamp": "2026-03-01T16:00:12Z",
+            "service": "payment-api",
+            "level": "WARN",
+            "component": "SearchApi",
+            "message": "Recent logs may not yet be searchable due to indexing lag"
+        }
+    ]
+}
