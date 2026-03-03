@@ -40,6 +40,13 @@ def run(scenario: str):
     pretty_print("TRACE ANALYSIS", traces_ar.structured_output)
     pretty_print("FINAL INCIDENT REPORT", report_ar.structured_output)
 
+    report = report_ar.structured_output
+    if report and hasattr(report, "runbook_references") and report.runbook_references:
+        print("\n=== RUNBOOK REFERENCES ===")
+        for ref in report.runbook_references:
+            dump = ref.model_dump() if hasattr(ref, "model_dump") else ref.dict()
+            print(f"  - [{dump['source']}] {dump['section']}: {dump['relevance']}")
+
 
 if __name__ == "__main__":
     run("db_connection_failure")  # normal / db_connection_failure / traffic_spike / opensearch_index_delay

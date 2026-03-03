@@ -35,12 +35,22 @@ class AnalysisResult(BaseModel):
     recommended_actions: list[ActionItem] = Field(default_factory=list, description="권장 조치 목록")
 
 
+class RunbookReference(BaseModel):
+    source: str = Field(description="런북 파일명")
+    section: str = Field(description="참조한 섹션명")
+    relevance: str = Field(description="이 런북이 현재 장애와 어떻게 관련되는지 설명")
+
+
 class IncidentReport(BaseModel):
     incident_summary: str = Field(description="최종 장애 요약")
     likely_root_causes: list[str] = Field(default_factory=list, description="가장 가능성 높은 원인들")
     overall_confidence: int = Field(ge=0, le=100, description="전체 신뢰도")
     severity: Literal["low", "medium", "high", "critical"] = Field(description="최종 심각도")
     impact: str = Field(description="장애 영향 범위")
-    immediate_actions: list[str] = Field(default_factory=list, description="즉시 조치")
-    follow_up_actions: list[str] = Field(default_factory=list, description="후속 조치")
+    immediate_actions: list[str] = Field(default_factory=list, description="즉시 조치 (런북 기반)")
+    follow_up_actions: list[str] = Field(default_factory=list, description="후속 조치 (런북 기반)")
     evidence_summary: list[str] = Field(default_factory=list, description="핵심 근거 요약")
+    runbook_references: list[RunbookReference] = Field(
+        default_factory=list,
+        description="참조한 런북 목록과 관련성",
+    )

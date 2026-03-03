@@ -8,6 +8,7 @@ from strands.multiagent.base import MultiAgentBase, MultiAgentResult, NodeResult
 from strands.multiagent.graph import GraphState
 
 from tools.mock_queries import query_logs, query_metrics, query_traces
+from tools.runbook_search import search_runbooks
 from schemas import AnalysisResult, IncidentReport
 
 
@@ -139,8 +140,15 @@ def build_incident_graph() -> Any:
             "너는 Report Generator이다.\n"
             "입력에는 이전 노드들의 결과(Logs/Metrics/Traces 분석 결과)가 JSON으로 포함된다.\n"
             "원시 로그/메트릭/트레이스가 아니라 '분석 결과 3개'만 근거로 IncidentReport를 작성해라.\n"
-            "세 결과가 서로 수렴하는 공통 원인을 우선으로 정리하고, 즉시 조치/후속 조치를 구분해라.\n"
+            "\n"
+            "반드시 다음 절차를 따라라:\n"
+            "1. 먼저 세 분석 결과에서 의심되는 장애 유형/키워드를 파악하라.\n"
+            "2. search_runbooks 도구를 호출하여 해당 장애 유형에 맞는 런북(운영 대응 절차)을 검색하라.\n"
+            "3. 런북에서 찾은 즉시 조치와 후속 조치를 immediate_actions, follow_up_actions에 반영하라.\n"
+            "4. runbook_references에 참조한 런북 정보를 기록하라.\n"
+            "5. 세 결과가 서로 수렴하는 공통 원인을 우선으로 정리하라.\n"
         ),
+        tools=[search_runbooks],
         structured_output_model=IncidentReport,
     )
 
