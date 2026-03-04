@@ -1,8 +1,30 @@
+import json
 import os
 import requests
 from schemas import IncidentReport
 
-SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
+
+def _load_slack_webhook_url() -> str:
+    """
+    SLACK_WEBHOOK_URL 환경변수 → 없으면 Secrets Manager에서 조회.
+    로컬(.env), Docker(환경변수), AgentCore(Secrets Manager) 세 환경 모두 대응.
+    """
+    url = os.environ.get("SLACK_WEBHOOK_URL", "")
+    if url:
+        return url
+
+    # Secrets Manager에서 조회 (AgentCore 환경)
+    try:
+        import boto3
+        client = boto3.client("secretsmanager", region_name=os.environ.get("AWS_REGION", "ap-northeast-2"))
+        response = client.get_secret_value(SecretId="incident-agent/slack-webhook")
+        secret = json.loads(response["SecretString"])
+        return secret.get("SLACK_WEBHOOK_URL", "")
+    except Exception:
+        return ""
+
+
+SLACK_WEBHOOK_URL = _load_slack_webhook_url()
 
 SEVERITY_COLOR = {
     "critical": "#FF0000",
