@@ -202,3 +202,54 @@ def run(scenario: str):
 | **Graph/DAG** | 방향성 비순환 그래프. Agent들의 실행 순서와 의존관계를 정의 |
 | **Fixture** | 테스트용 가짜 데이터. 실제 서버 없이도 시스템을 시험할 수 있게 함 |
 | **Observability** | 시스템의 내부 상태를 외부에서 관찰하는 것. 로그/메트릭/트레이스가 3대 축 |
+
+---
+
+## 버그 수정 이력
+
+### 버그 1: FixturePrepNode `list[ContentBlock]` 파싱 실패
+- **증상**: 항상 `scenario="normal"` 기본값 사용 → 어떤 시나리오를 요청해도 normal 데이터 로드
+- **원인**: Strands SDK가 entry point 노드에 task를 `list[ContentBlock]` (딕셔너리 리스트)로 전달하는데 `str()`로 변환하면 `"[{'text': '...'}]"` 형태가 되어 JSON 파싱 실패
+- **수정** (`orchestrators/incident_graph.py`):
+  ```python
+  if isinstance(task, list):
+      task = "".join(
+          block["text"] for block in task if isinstance(block, dict) and block.get("text")
+      )
+  ```
+
+### 버그 2: `search_runbooks` `@tool` 데코레이터 누락
+- **증상**: Slack 보고서의 "참조 런북" 항목이 항상 "없음"으로 표시
+- **원인**: `runbook_search.py`의 `search_runbooks` 함수에 `@tool` 데코레이터가 없어 Strands SDK가 tool spec으로 인식하지 못함. 실행 로그에 `unrecognized tool specification` 경고 출력
+- **수정** (`tools/runbook_search.py`):
+  ```python
+  from strands import tool
+
+  @tool
+  def search_runbooks(query: str, n_results: int = 5) -> str:
+      ...
+  ```
+
+---
+
+## 실행 결과 (전 시나리오 검증 완료)
+
+| 시나리오 | severity | confidence | Slack | 런북 참조 |
+|---|---|---|---|---|
+| `db_connection_failure` | critical | 95% | ✅ | ✅ (`db_connection_failure.md`) |
+| `traffic_spike` | critical | 92% | ✅ | ✅ (`traffic_spike.md`) |
+| `opensearch_index_delay` | high | 90% | ✅ | ✅ (`opensearch_index_delay.md`) |
+| `normal` | low | 85% | ✅ | ✅ (일반 런북 참조) |
+
+## 테스트 현황
+
+```
+29 passed in 2.92s
+```
+
+| 테스트 파일 | 내용 |
+|---|---|
+| `test_log_agent.py` | 로그 쿼리 + AnalysisResult 스키마 검증 (5개) |
+| `test_metric_trace_agent.py` | 메트릭/트레이스 쿼리 + 스키마 + runbook_references 배열 검증 (12개) |
+| `test_report_agent.py` | IncidentReport 스키마 + runbook_references 필드 검증 (3개) |
+| `test_runbook_search.py` | `@tool` 데코레이터 확인 + 시나리오별 런북 검색 + 결과 구조 검증 (9개) |

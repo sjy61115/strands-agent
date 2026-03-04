@@ -1,0 +1,5 @@
+strands-agents
+chromadb
+pydantic
+requests
+python-dotenv

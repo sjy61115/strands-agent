@@ -1,0 +1,17 @@
+# 환경변수 (Slack Webhook URL 등 시크릿 포함)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# 벡터 DB 캐시
+chroma/
+*.db
+
+# IDE
+.cursor/
+.vscode/
+.idea/

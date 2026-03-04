@@ -1,6 +1,8 @@
 import json
 from typing import Any
 
+from strands import tool
+
 from tools.runbook_knowledge_base import RunbookKnowledgeBase
 
 _kb: RunbookKnowledgeBase | None = None
@@ -13,6 +15,7 @@ def _get_kb() -> RunbookKnowledgeBase:
     return _kb
 
 
+@tool
 def search_runbooks(query: str, n_results: int = 5) -> str:
     """
     장애 상황에 맞는 런북(운영 대응 절차)을 Knowledge Base에서 검색한다.

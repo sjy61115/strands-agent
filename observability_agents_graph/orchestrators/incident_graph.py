@@ -37,14 +37,18 @@ class FixturePrepNode(MultiAgentBase):
         self.name = name
 
     async def invoke_async(self, task, invocation_state=None, **kwargs) -> MultiAgentResult:
-        # task는 보통 문자열이므로 JSON 파싱을 시도
-        if not isinstance(task, str):
+        # Strands Graph는 entry point 노드에게 list[ContentBlock] (dict with "text" key) 형태로 task를 전달함.
+        # ContentBlock = TypedDict {"text": str, ...} 이므로 text 필드를 꺼내서 이어붙인다.
+        if isinstance(task, list):
+            task = "".join(
+                block["text"] for block in task if isinstance(block, dict) and block.get("text")
+            )
+        elif not isinstance(task, str):
             task = str(task)
 
         try:
             payload = json.loads(task)
         except Exception:
-            # 최소 fallback: 문자열 그대로
             payload = {"raw_task": task}
 
         scenario = payload.get("scenario", "normal")
@@ -102,10 +106,16 @@ def build_incident_graph() -> Any:
         name="logs_agent",
         system_prompt=(
             "너는 Logs Agent이다.\n"
-            "입력에는 이전 노드(prep) 결과로 logs/metrics/traces가 담긴 JSON이 제공된다.\n"
-            "그 중 logs만 근거로 분석하고 AnalysisResult 스키마로 구조화해라.\n"
+            "\n"
+            "입력 구조:\n"
+            "  - 'Original Task' 섹션: scenario/service/시간 정보만 있고 실제 데이터는 없다.\n"
+            "  - 'From prep > Agent' 섹션: 실제 분석 데이터가 담긴 JSON이 있다.\n"
+            "\n"
+            "반드시 'From prep' 섹션의 JSON에서 'logs' 키의 데이터만 근거로 분석하라.\n"
+            "logs.items 배열의 각 항목이 분석 대상이다.\n"
             "- analysis_type은 반드시 'log'\n"
-            "- evidence는 실제 logs 내용에서만 뽑아라(추측 금지)\n"
+            "- evidence는 실제 logs.items 내용에서만 뽑아라(추측 금지)\n"
+            "- logs.items가 비어 있으면 severity는 'info', suspected_root_cause는 빈 배열로 반환\n"
         ),
         structured_output_model=AnalysisResult,
     )
@@ -114,10 +124,16 @@ def build_incident_graph() -> Any:
         name="metrics_agent",
         system_prompt=(
             "너는 Metrics Agent이다.\n"
-            "입력에는 이전 노드(prep) 결과로 logs/metrics/traces가 담긴 JSON이 제공된다.\n"
-            "그 중 metrics만 근거로 분석하고 AnalysisResult 스키마로 구조화해라.\n"
+            "\n"
+            "입력 구조:\n"
+            "  - 'Original Task' 섹션: scenario/service/시간 정보만 있고 실제 데이터는 없다.\n"
+            "  - 'From prep > Agent' 섹션: 실제 분석 데이터가 담긴 JSON이 있다.\n"
+            "\n"
+            "반드시 'From prep' 섹션의 JSON에서 'metrics' 키의 데이터만 근거로 분석하라.\n"
+            "metrics.items 배열의 각 항목(metric_name, value)이 분석 대상이다.\n"
             "- analysis_type은 반드시 'metric'\n"
-            "- evidence는 실제 metrics 내용에서만 뽑아라(추측 금지)\n"
+            "- evidence는 실제 metrics.items 내용에서만 뽑아라(추측 금지)\n"
+            "- metrics.items가 비어 있으면 severity는 'info', suspected_root_cause는 빈 배열로 반환\n"
         ),
         structured_output_model=AnalysisResult,
     )
@@ -126,10 +142,16 @@ def build_incident_graph() -> Any:
         name="traces_agent",
         system_prompt=(
             "너는 Traces Agent이다.\n"
-            "입력에는 이전 노드(prep) 결과로 logs/metrics/traces가 담긴 JSON이 제공된다.\n"
-            "그 중 traces만 근거로 분석하고 AnalysisResult 스키마로 구조화해라.\n"
+            "\n"
+            "입력 구조:\n"
+            "  - 'Original Task' 섹션: scenario/service/시간 정보만 있고 실제 데이터는 없다.\n"
+            "  - 'From prep > Agent' 섹션: 실제 분석 데이터가 담긴 JSON이 있다.\n"
+            "\n"
+            "반드시 'From prep' 섹션의 JSON에서 'traces' 키의 데이터만 근거로 분석하라.\n"
+            "traces.items 배열의 각 항목(span_name, status, error_message, duration_ms)이 분석 대상이다.\n"
             "- analysis_type은 반드시 'trace'\n"
-            "- evidence는 실제 traces 내용에서만 뽑아라(추측 금지)\n"
+            "- evidence는 실제 traces.items 내용에서만 뽑아라(추측 금지)\n"
+            "- traces.items가 비어 있으면 severity는 'info', suspected_root_cause는 빈 배열로 반환\n"
         ),
         structured_output_model=AnalysisResult,
     )
@@ -147,6 +169,11 @@ def build_incident_graph() -> Any:
             "3. 런북에서 찾은 즉시 조치와 후속 조치를 immediate_actions, follow_up_actions에 반영하라.\n"
             "4. runbook_references에 참조한 런북 정보를 기록하라.\n"
             "5. 세 결과가 서로 수렴하는 공통 원인을 우선으로 정리하라.\n"
+            "\n"
+            "출력 형식 규칙 (반드시 준수):\n"
+            "- runbook_references는 반드시 JSON 배열([])로 반환하라. 런북이 없으면 빈 배열([])로 반환하라.\n"
+            "- likely_root_causes, immediate_actions, follow_up_actions, evidence_summary도 모두 JSON 배열([])로 반환하라.\n"
+            "- 문자열이나 null이 아닌 반드시 배열 형태여야 한다.\n"
         ),
         tools=[search_runbooks],
         structured_output_model=IncidentReport,
