@@ -3,3 +3,5 @@ chromadb
 pydantic
 requests
 python-dotenv
+bedrock-agentcore
+boto3
