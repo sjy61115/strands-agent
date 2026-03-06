@@ -15,7 +15,7 @@ import uuid
 
 import boto3
 
-AGENT_RUNTIME_ARN = "arn:aws:bedrock-agentcore:ap-northeast-2:526002960031:runtime/incidentAgent-hyCbEN721K"
+AGENT_RUNTIME_ARN = "arn:aws:bedrock-agentcore:ap-northeast-2:526002960031:runtime/incidentAgent-vN5P0nFrdA"
 REGION = "ap-northeast-2"
 
 SCENARIOS = {
