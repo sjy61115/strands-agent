@@ -95,11 +95,16 @@ class FixturePrepNode(MultiAgentBase):
         )
 
 
-def build_incident_graph() -> Any:
+def build_incident_graph(session_manager=None) -> Any:
     """
     Graph 구성:
       prep -> (logs, metrics, traces) -> report
     report는 3개 분석이 모두 완료되어야 실행되도록 AND 조건 edge 적용.
+
+    Args:
+        session_manager: AgentCoreMemorySessionManager 인스턴스 (선택).
+            전달하면 report_agent에 연결되어 과거 장애 컨텍스트가 자동 주입되고
+            이번 분석 결과가 Memory에 저장된다.
     """
     # 1) 노드(Agent) 준비: structured_output_model을 Agent init에 기본값으로 박아둠
     logs_agent = Agent(
@@ -165,10 +170,13 @@ def build_incident_graph() -> Any:
             "\n"
             "반드시 다음 절차를 따라라:\n"
             "1. 먼저 세 분석 결과에서 의심되는 장애 유형/키워드를 파악하라.\n"
-            "2. search_runbooks 도구를 호출하여 해당 장애 유형에 맞는 런북(운영 대응 절차)을 검색하라.\n"
-            "3. 런북에서 찾은 즉시 조치와 후속 조치를 immediate_actions, follow_up_actions에 반영하라.\n"
-            "4. runbook_references에 참조한 런북 정보를 기록하라.\n"
-            "5. 세 결과가 서로 수렴하는 공통 원인을 우선으로 정리하라.\n"
+            "2. <past_incident_context> 태그가 있으면 과거 유사 장애 이력을 참고하라.\n"
+            "   - 동일 패턴이 반복된다면 incident_summary에 '반복 장애' 여부를 명시하라.\n"
+            "   - 과거에 효과 있었던 조치가 있으면 immediate_actions에 우선 포함하라.\n"
+            "3. search_runbooks 도구를 호출하여 해당 장애 유형에 맞는 런북(운영 대응 절차)을 검색하라.\n"
+            "4. 런북에서 찾은 즉시 조치와 후속 조치를 immediate_actions, follow_up_actions에 반영하라.\n"
+            "5. runbook_references에 참조한 런북 정보를 기록하라.\n"
+            "6. 세 결과가 서로 수렴하는 공통 원인을 우선으로 정리하라.\n"
             "\n"
             "출력 형식 규칙 (반드시 준수):\n"
             "- runbook_references는 반드시 JSON 배열([])로 반환하라. 런북이 없으면 빈 배열([])로 반환하라.\n"
@@ -177,6 +185,7 @@ def build_incident_graph() -> Any:
         ),
         tools=[search_runbooks],
         structured_output_model=IncidentReport,
+        session_manager=session_manager,
     )
 
     # 2) prep 노드(LLM 없이 fixture 로드)

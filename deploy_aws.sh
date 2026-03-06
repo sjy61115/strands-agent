@@ -129,6 +129,41 @@ aws iam put-role-policy \
       \"Resource\": \"arn:aws:secretsmanager:${REGION}:${ACCOUNT_ID}:secret:incident-agent/*\"
     }]
   }" > /dev/null
+
+# Memory 읽기/쓰기 및 Memory 리소스 관리 권한
+aws iam put-role-policy \
+  --role-name "${IAM_ROLE_NAME}" \
+  --policy-name incident-agentcore-memory-policy \
+  --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "MemoryDataPlane",
+        "Effect": "Allow",
+        "Action": [
+          "bedrock-agentcore:CreateEvent",
+          "bedrock-agentcore:GetEvent",
+          "bedrock-agentcore:ListEvents",
+          "bedrock-agentcore:RetrieveMemoryRecords",
+          "bedrock-agentcore:GetMemoryRecord",
+          "bedrock-agentcore:ListMemoryRecords"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Sid": "MemoryControlPlane",
+        "Effect": "Allow",
+        "Action": [
+          "bedrock-agentcore-control:CreateMemory",
+          "bedrock-agentcore-control:GetMemory",
+          "bedrock-agentcore-control:ListMemories",
+          "bedrock-agentcore-control:UpdateMemory"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }' > /dev/null
+
 echo "[5/7] IAM 정책 업데이트 완료"
 
 # ── Secrets Manager (이미 존재하면 값만 업데이트) ─────────────────────────
@@ -223,4 +258,46 @@ if [ -f "invoke_agentcore.py" ]; then
     "s|REGION = \".*\"|REGION = \"${REGION}\"|" \
     invoke_agentcore.py
   echo " invoke_agentcore.py ARN/리전 자동 업데이트 완료"
+fi
+
+# ── AgentCore Memory 생성 (이미 존재하면 ID만 조회) ─────────────────────────
+echo ""
+echo "[ Memory ] AgentCore Memory 확인/생성 중..."
+MEMORY_ID=$(aws bedrock-agentcore-control list-memories \
+  --region "${REGION}" \
+  --query "memories[?contains(id,'incident_memory')].id" \
+  --output text 2>/dev/null)
+
+if [ -n "$MEMORY_ID" ] && [ "$MEMORY_ID" != "None" ]; then
+  echo "[ Memory ] 기존 Memory 사용: ${MEMORY_ID}"
+else
+  MEMORY_ID=$(aws bedrock-agentcore-control create-memory \
+    --name "incident_memory" \
+    --description "AI Observability incident analysis history" \
+    --event-expiry-duration 90 \
+    --memory-strategies '[{"semanticMemoryStrategy":{"name":"incident_semantic"}}]' \
+    --region "${REGION}" \
+    --query 'memory.memoryId' --output text 2>&1); EXIT=$?
+  if [ $EXIT -ne 0 ] || [ -z "$MEMORY_ID" ]; then
+    echo "[ Memory ] Memory 생성 오류: ${MEMORY_ID}"
+    MEMORY_ID=""
+  fi
+
+  if [ -n "$MEMORY_ID" ]; then
+    echo "[ Memory ] 새 Memory 생성 완료: ${MEMORY_ID}"
+  else
+    echo "[ Memory ] Memory 생성 실패 — 수동으로 생성 후 AGENTCORE_MEMORY_ID 환경변수를 설정하세요."
+  fi
+fi
+
+if [ -n "$MEMORY_ID" ] && [ "$MEMORY_ID" != "None" ]; then
+  # Secrets Manager에 Memory ID 저장 (컨테이너에서 환경변수로 사용)
+  aws secretsmanager put-secret-value \
+    --secret-id "${SECRET_NAME}" \
+    --secret-string "{\"SLACK_WEBHOOK_URL\": \"${SLACK_WEBHOOK_URL}\", \"AGENTCORE_MEMORY_ID\": \"${MEMORY_ID}\"}" \
+    --region "${REGION}" > /dev/null
+  echo "[ Memory ] Memory ID를 Secrets Manager에 저장했습니다."
+  echo ""
+  echo " Memory ID  : ${MEMORY_ID}"
+  echo " 로컬 테스트 시: export AGENTCORE_MEMORY_ID=${MEMORY_ID}"
 fi

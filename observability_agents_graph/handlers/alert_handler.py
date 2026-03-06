@@ -22,6 +22,7 @@ AWS 배포 시 SLACK_WEBHOOK_URL 환경변수를 설정해야 한다.
 
 import json
 import sys
+import uuid
 from pathlib import Path
 
 # handlers/ 폴더에서 직접 실행할 때도 프로젝트 루트를 sys.path에 추가
@@ -33,6 +34,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 from orchestrators.incident_graph import build_incident_graph
+from tools.incident_memory import create_report_session_manager
 from tools.slack_notifier import send_incident_report
 
 # AgentCore SDK가 설치된 경우에만 활성화 (로컬 미설치 시에도 CLI 모드로 동작)
@@ -140,10 +142,20 @@ def _run_incident_analysis(alert: dict) -> dict:
     start_time = alert.get("startsAt", "2026-03-01T14:00:00Z")
     end_time   = alert.get("endsAt",   "2026-03-01T14:05:00Z")
 
-    print(f"[alert_handler] 장애 분석 시작 — scenario={scenario}, service={service}")
+    # 장애 1건 = 1 세션 ID (Memory 저장 단위)
+    session_id = f"incident-{uuid.uuid4().hex}"
+
+    print(f"[alert_handler] 장애 분석 시작 — scenario={scenario}, service={service}, session={session_id}")
+
+    # AgentCore Memory 세션 매니저 생성 (실패해도 분석은 계속 진행)
+    session_manager = create_report_session_manager(service, session_id)
+    if session_manager:
+        print(f"[alert_handler] AgentCore Memory 연결 완료 — 과거 장애 컨텍스트가 report_agent에 주입됩니다.")
+    else:
+        print(f"[alert_handler] AgentCore Memory 미연결 — Memory 없이 분석을 진행합니다.")
 
     # 1. Incident Graph 실행 (Prep → Logs/Metrics/Traces 병렬 → Report)
-    graph = build_incident_graph()
+    graph = build_incident_graph(session_manager=session_manager)
     task  = {
         "scenario":   scenario,
         "service":    service,
